@@ -1,18 +1,23 @@
 import json
 import csv
+import os
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from dotenv import load_dotenv
 
 # -----------------------------
-# CONFIGURATION
+# CONFIGURATION (load from environment / .env)
 # -----------------------------
-INPUT_FILE = "music_export.txt"  # Output from AppleScript
-CLIENT_ID = "YOUR_SPOTIFY_CLIENT_ID"
-CLIENT_SECRET = "YOUR_SPOTIFY_CLIENT_SECRET"
-REDIRECT_URI = "http://localhost:8888/callback"
-SCOPE = "playlist-modify-private playlist-modify-public"
-MISSING_TRACKS_FILE = "missing_tracks.csv"
-JSON_EXPORT_FILE = "music_export.json"
+load_dotenv()
+
+# If an environment variable is not set, fall back to the existing default
+INPUT_FILE = os.getenv("INPUT_FILE", "music_export.txt")  # Output from AppleScript
+CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID", "YOUR_SPOTIFY_CLIENT_ID")
+CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET", "YOUR_SPOTIFY_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://localhost:8888/callback")
+SCOPE = os.getenv("SPOTIFY_SCOPE", "playlist-modify-private playlist-modify-public")
+MISSING_TRACKS_FILE = os.getenv("MISSING_TRACKS_FILE", "missing_tracks.csv")
+JSON_EXPORT_FILE = os.getenv("JSON_EXPORT_FILE", "music_export.json")
 
 # -----------------------------
 # STEP 1: Parse Apple Music Export
