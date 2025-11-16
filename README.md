@@ -103,6 +103,7 @@ pytest
 
 ## Notes
 
+- Spotify does not require unique playlist names, so the script will always create a new playlist with the given name even if a similar one already exists.
 - The script creates a timestamped JSON export of parsed playlists. This file can be reviewed before uploading.
 - If undecodable bytes are encountered, they are replaced with the Unicode replacement character (`�`).
 - Ensure your Spotify Developer credentials are correctly set in the `.env` file.
