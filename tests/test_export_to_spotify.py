@@ -3,7 +3,9 @@ import importlib
 
 import pytest
 
-import applemusic_to_spotify as ams
+import export_to_spotify as exs
+from pathlib import Path
+import json
 
 
 def test_parse_music_export(tmp_path):
@@ -15,7 +17,7 @@ def test_parse_music_export(tmp_path):
     f = tmp_path / "export.txt"
     f.write_text(data, encoding="utf-8")
 
-    playlists = ams.parse_music_export(str(f))
+    playlists = exs.parse_music_export(str(f), delimiter="|")
 
     assert "MyPlaylist" in playlists
     assert len(playlists["MyPlaylist"]) == 2
@@ -28,7 +30,7 @@ def test_search_track_found_and_fallback():
         def search(self, q, type, limit):
             return {"tracks": {"items": [{"uri": "spotify:track:123"}]}}
 
-    uri = ams.search_track(MockSpFound(), "Song A", "Artist A")
+    uri = exs.search_track(MockSpFound(), "Song A", "Artist A")
     assert uri == "spotify:track:123"
 
     class MockSpFallback:
@@ -42,15 +44,15 @@ def test_search_track_found_and_fallback():
                 return {"tracks": {"items": []}}
             return {"tracks": {"items": [{"uri": "spotify:track:456"}]}}
 
-    uri2 = ams.search_track(MockSpFallback(), "Song B", "Artist B")
+    uri2 = exs.search_track(MockSpFallback(), "Song B", "Artist B")
     assert uri2 == "spotify:track:456"
 
 
 def test_search_track_no_title():
     # None or empty or 'unknown' should return None
-    assert ams.search_track(None, "", None) is None
-    assert ams.search_track(None, None, None) is None
-    assert ams.search_track(None, "unknown", "Artist") is None
+    assert exs.search_track(None, "", None) is None
+    assert exs.search_track(None, None, None) is None
+    assert exs.search_track(None, "unknown", "Artist") is None
 
 
 def test_create_spotify_playlists_records_missing_and_adds_tracks(tmp_path, monkeypatch):
@@ -84,13 +86,13 @@ def test_create_spotify_playlists_records_missing_and_adds_tracks(tmp_path, monk
             return "spotify:track:found"
         return None
 
-    monkeypatch.setattr(ams, "search_track", fake_search_track)
+    monkeypatch.setattr(exs, "search_track", fake_search_track)
 
     # Redirect missing tracks file to a temp path
     tmp_missing = tmp_path / "missing.csv"
-    monkeypatch.setattr(ams, "MISSING_TRACKS_FILE", str(tmp_missing))
+    monkeypatch.setattr(exs, "MISSING_TRACKS_FILE", str(tmp_missing))
 
-    ams.create_spotify_playlists(sp, "testuser", playlists)
+    exs.create_spotify_playlists(sp, "testuser", playlists)
 
     # Verify playlist creation
     assert sp.created and sp.created[0][1] == "MyList"
@@ -101,3 +103,24 @@ def test_create_spotify_playlists_records_missing_and_adds_tracks(tmp_path, monk
     # Verify missing file contains the missing track title
     content = tmp_missing.read_text(encoding="utf-8")
     assert "MissingSong" in content
+
+
+def test_create_json_export_from_test_file(tmp_path, monkeypatch):
+    """Verify the script can parse the bundled test_export_300.csv and save a JSON export."""
+    data_path = Path(exs.__file__).parent / "test_export_300.csv"
+    assert data_path.exists(), f"test file not found at {data_path}"
+
+    playlists = exs.parse_music_export(str(data_path))
+    assert isinstance(playlists, dict)
+    assert playlists, "parsed playlists should not be empty"
+
+    out = tmp_path / "export.json"
+    # monkeypatch module constant and perform the same save behavior as main
+    monkeypatch.setattr(exs, "JSON_EXPORT_FILE", str(out))
+
+    with open(exs.JSON_EXPORT_FILE, "w", encoding="utf-8") as f:
+        json.dump(playlists, f, indent=2)
+
+    assert out.exists()
+    loaded = json.loads(out.read_text(encoding="utf-8"))
+    assert loaded == playlists

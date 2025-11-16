@@ -1,64 +1,112 @@
-# applemusic_to_spotify
+# CSV Export to Spotify Playlist Converter
 
-Small utility to convert an Apple Music export into Spotify playlists.
+This script converts CSV playlist exports into Spotify playlists. It handles encoding issues, rate limits, and provides detailed logging and export options.
 
-## What this repository contains
+## Features
 
-- `applemusic_to_spotify.py` — main script that parses an Apple Music export and creates Spotify playlists.
-- `tests/` — pytest-based unit tests for parsing and Spotify-related logic (uses mocks).
-- `.env.example` — example environment variables file.
-- `.env` — local environment file (should contain your real Spotify credentials). This file is ignored by git via `.gitignore`.
-- `requirements.txt` — Python dependencies.
+- **CSV Export Parsing**: Supports semicolon-delimited files by default, with customizable delimiters.
+- **Encoding Fallback**: Automatically detects and handles encodings (`utf-8`, `cp1252`, `latin-1`), with a fallback to `utf-8` with replacement for undecodable bytes.
+- **Spotify Playlist Creation**: Authenticates with Spotify and creates playlists with tracks from the parsed export.
+- **Rate Limit Handling**: Detects and respects Spotify API rate limits, with optional logging of rate-limit events.
+- **Export Options**:
+  - Timestamped JSON export (e.g., `playlist_export_2025-11-16_12-34-56Z.json`).
+  - No duplicate "latest" file; the timestamped file is the primary export.
+- **Interactive Confirmation**: Optionally prompts for confirmation before uploading playlists to Spotify.
+- **Command-Line Flags**:
+  - `--delimiter`: Specify the delimiter used in the export file.
+  - `--export-only`: Parse and export playlists without uploading to Spotify.
+  - `--verbose`: Print detailed diagnostics (e.g., encoding, delimiter, playlist counts).
+  - `--confirm`: Skip confirmation prompts and proceed directly to upload.
+  - `--stop-on-429`: Stop execution on the first rate-limit event.
+  - `--rate-log-file`: Specify a file to log rate-limit events.
 
 ## Requirements
 
-- Python 3.8+ (this project was tested with the system Python available here).
-- A Spotify developer application (Client ID, Client Secret, Redirect URI).
+- Python 3.8+
+- Spotify Developer Account (for API credentials)
+- CSV playlist export file
 
-## Quick start (recommended)
+## Setup
 
-1. Create a virtual environment and install dependencies (from project root):
+1. Clone the repository:
+   ```sh
+   git clone <repository-url>
+   cd applemusic_to_spotify
+   ```
 
+2. Create and activate a virtual environment:
+   ```sh
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+3. Install dependencies:
+   ```sh
+   pip install -r requirements.txt
+   ```
+
+4. Create a `.env` file with your Spotify API credentials:
+   ```env
+   SPOTIFY_CLIENT_ID=your_client_id
+   SPOTIFY_CLIENT_SECRET=your_client_secret
+   SPOTIFY_REDIRECT_URI=http://localhost:8888/callback
+   ```
+
+## Usage
+
+### Basic Usage
+
+1. Export your playlists to a CSV file (e.g., `playlist_export.csv`).
+2. Run the script:
+   ```sh
+   python export_to_spotify.py --input playlist_export.csv
+   ```
+
+### Advanced Options
+
+- Specify a custom delimiter:
+  ```sh
+  python export_to_spotify.py --input playlist_export.csv --delimiter "|"
+  ```
+
+- Export playlists without uploading:
+  ```sh
+  python export_to_spotify.py --input playlist_export.csv --export-only
+  ```
+
+- Enable verbose diagnostics:
+  ```sh
+  python export_to_spotify.py --input playlist_export.csv --verbose
+  ```
+
+- Skip confirmation prompts:
+  ```sh
+  python export_to_spotify.py --input playlist_export.csv --confirm
+  ```
+
+- Stop on the first rate-limit event:
+  ```sh
+  python export_to_spotify.py --input playlist_export.csv --stop-on-429
+  ```
+
+- Log rate-limit events to a specific file:
+  ```sh
+  python export_to_spotify.py --input playlist_export.csv --rate-log-file rate_limit_log.jsonl
+  ```
+
+## Testing
+
+Run the test suite with:
 ```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
+pytest
 ```
-
-2. Create your `.env` file from the example and fill in real credentials:
-
-```sh
-cp .env.example .env
-# then edit .env and set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET
-```
-
-3. Optionally update other settings in `.env` (INPUT_FILE, redirect URI, etc.).
-
-4. Run tests:
-
-```sh
-# with the virtualenv active
-pytest -q tests
-# or explicitly with the venv pytest binary
-./.venv/bin/pytest -q tests
-```
-
-5. Run the script (with venv active):
-
-```sh
-python applemusic_to_spotify.py
-```
-
-The script will read configuration from environment variables (loaded from `.env` by `python-dotenv`). If environment variables are missing, the script will fall back to sensible defaults defined in the code (e.g. `music_export.txt` input file).
 
 ## Notes
 
-- Do NOT commit your `.env` file — it contains secrets. The repo includes `.gitignore` with `.env` added.
-- Tests are written to avoid network calls by mocking Spotify interactions.
-- If you want me to run the tests here, I can run them inside the created `.venv` and report results.
+- The script creates a timestamped JSON export of parsed playlists. This file can be reviewed before uploading.
+- If undecodable bytes are encountered, they are replaced with the Unicode replacement character (`�`).
+- Ensure your Spotify Developer credentials are correctly set in the `.env` file.
 
-## Troubleshooting
+## License
 
-- If your editor shows unresolved import warnings, make sure the `.venv` interpreter is selected in your editor or install dependencies in your active environment.
-- If Spotify OAuth prompts are required, ensure your `SPOTIFY_REDIRECT_URI` matches what you've configured in the Spotify Developer Dashboard.
+This project is licensed under the MIT License.

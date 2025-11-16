@@ -1,3 +1,6 @@
 .env
 __pycache__/
 tests/__pycache__/
+.cache
+missing_tracks.csv
+playlist_export*
