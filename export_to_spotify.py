@@ -386,6 +386,8 @@ if __name__ == "__main__":
             print("Aborting upload.")
             raise SystemExit(0)
 
+    start_time = time.time()  # Start the timer
+
     sp = authenticate_spotify()
     try:
         user_id = spotify_call(sp.current_user)["id"]
@@ -397,3 +399,7 @@ if __name__ == "__main__":
         create_spotify_playlists(sp, user_id, playlists)
     except RateLimitCaptured:
         print(f"A rate limit was captured. Details were appended to {RATE_LIMIT_LOG}")
+
+    end_time = time.time()  # End the timer
+    elapsed_time = end_time - start_time
+    print(f"\n✅ All playlists processed in {elapsed_time:.2f} seconds!")
