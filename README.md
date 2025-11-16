@@ -107,6 +107,12 @@ pytest
 - If undecodable bytes are encountered, they are replaced with the Unicode replacement character (`�`).
 - Ensure your Spotify Developer credentials are correctly set in the `.env` file.
 
+## Disclaimer
+
+This project was created with the assistance of Visual Studio Code Agents.  
+While efforts have been made to ensure functionality and accuracy, the code may contain errors or limitations.  
+Use this project at your own discretion and risk. The author assumes no liability for any issues arising from its use.
+
 ## License
 
 This project is licensed under the MIT License.
